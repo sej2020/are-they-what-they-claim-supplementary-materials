@@ -1,0 +1,27 @@
+dataset_shape: 10000000 x 10
+failed_regs: []
+failed_regs_exceptions: []
+repeat: 1
+rows_in_experiment:
+  - 10
+  - 31
+  - 100
+  - 316
+  - 1000
+  - 3162
+  - 10000
+  - 31622
+  - 100000
+  - 316227
+  - 1000000
+  - 3162277
+  - 10000000
+timer_method: process in nanoseconds
+reg_names:
+  - tf-necd
+  - tf-cod
+  - pytorch-qrcp
+  - pytorch-qr
+  - pytorch-svd
+  - pytorch-svddc
+  - sklearn-svddc

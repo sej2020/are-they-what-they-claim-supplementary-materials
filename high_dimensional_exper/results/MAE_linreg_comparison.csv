@@ -1,0 +1,11 @@
+,tf-necd,tf-cod,pytorch-qrcp,pytorch-qr,pytorch-svd,pytorch-svddc,sklearn-svddc,mxnet-svddc
+Blog Feedback,Failed,9.522,17.332,Failed,9.512,9.512,9.522,9.523
+Communities and Crime,0.097,0.097,0.147,0.769,0.197,0.197,0.097,0.097
+Facebook Comment Volume,Failed,35.772,57.499,Failed,32.74,32.74,35.772,35.772
+Geographical Origin of Music,Failed,37.465,50.123,Failed,37.465,37.465,37.465,37.465
+Hailstone,Failed,0.372,0.469,1642.746,0.379,0.379,0.372,0.372
+Hourly Energy Demand,Failed,6.18,9.803,Failed,9.23,9.23,6.18,6.18
+KEGG Metabolic Pathway,Failed,0.926,11.744,0.926,16.918,16.918,0.926,0.927
+Online News Popularity,Failed,3072.803,6567.113,3363.31,3139.788,3139.788,4516520.046,3072.79
+Residential Building,Failed,20.2,428.634,84396.447,38.457,38.548,20.2,20.2
+Superconductivity,13.343,13.343,26.361,13.343,17.784,17.784,13.343,13.343

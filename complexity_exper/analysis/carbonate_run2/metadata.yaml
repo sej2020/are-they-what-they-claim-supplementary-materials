@@ -1,0 +1,22 @@
+dataset_shape: 750000000 x 10
+failed_regs: []
+failed_regs_exceptions: []
+repeat: 10
+rows_in_experiment:
+  - 10
+  - 31
+  - 100
+  - 316
+  - 1000
+  - 3162
+  - 10000
+  - 31622
+  - 100000
+  - 316227
+  - 1000000
+  - 3162277
+  - 10000000
+  - 31622776
+  - 100000000
+  - 316227766
+timer_method: process in nanoseconds

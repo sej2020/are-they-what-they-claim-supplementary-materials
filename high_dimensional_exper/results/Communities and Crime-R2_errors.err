@@ -1,0 +1,8 @@
+tf-necd: [ValueError('Failed to convert a NumPy array to a Tensor (Unsupported object type int).')]
+tf-cod: [ValueError('Failed to convert a NumPy array to a Tensor (Unsupported object type int).')]
+pytorch-qrcp: [TypeError("can't convert np.ndarray of type numpy.object_. The only supported types are: float64, float32, float16, complex64, complex128, int64, int32, int16, int8, uint8, and bool.")]
+pytorch-qr: [TypeError("can't convert np.ndarray of type numpy.object_. The only supported types are: float64, float32, float16, complex64, complex128, int64, int32, int16, int8, uint8, and bool.")]
+pytorch-svd: [TypeError("can't convert np.ndarray of type numpy.object_. The only supported types are: float64, float32, float16, complex64, complex128, int64, int32, int16, int8, uint8, and bool.")]
+pytorch-svddc: [TypeError("can't convert np.ndarray of type numpy.object_. The only supported types are: float64, float32, float16, complex64, complex128, int64, int32, int16, int8, uint8, and bool.")]
+sklearn-svddc: [ValueError("could not convert string to float: '?'")]
+mxnet-svddc: [UFuncTypeError(<ufunc 'lstsq_n'>, 'same_kind', dtype('O'), dtype('float64'), 0)]

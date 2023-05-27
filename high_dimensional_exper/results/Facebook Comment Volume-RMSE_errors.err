@@ -1,0 +1,4 @@
+tf-necd: [ValueError('Input contains NaN.')]
+pytorch-qr: [_LinAlgError('torch.linalg.lstsq: The least squares solution could not be computed because the input matrix does not have full rank (error code: 38).')]
+tf-necd: [ValueError('Input contains NaN.')]
+pytorch-qr: [_LinAlgError('torch.linalg.lstsq: The least squares solution could not be computed because the input matrix does not have full rank (error code: 38).')]

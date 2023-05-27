@@ -1,0 +1,2 @@
+tf-necd: [ValueError('Input contains NaN.')]
+tf-necd: [ValueError('Input contains NaN.')]

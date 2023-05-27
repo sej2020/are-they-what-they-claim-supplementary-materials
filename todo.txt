@@ -1,0 +1,9 @@
+Sam
+    1. Cleanup circular data
+    2. Write README instructions
+    3. Docstrings
+
+Josh
+    1. Cleanup complexity
+    2. Write README for complexity (explain no windows)
+    3. Create requirements.txt / env.yaml

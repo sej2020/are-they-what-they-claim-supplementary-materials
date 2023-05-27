@@ -1,0 +1,9 @@
+2023-04-23 05:27:43.836919: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE4.1 SSE4.2 AVX AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-04-23 05:34:26.687222: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE4.1 SSE4.2 AVX AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-04-23 05:47:19.713685: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 72000000000 exceeds 10% of free system memory.
+2023-04-23 05:48:53.191405: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 72000000000 exceeds 10% of free system memory.
+2023-04-23 05:50:22.240072: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 72000000000 exceeds 10% of free system memory.
+2023-04-23 05:51:50.906926: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 72000000000 exceeds 10% of free system memory.
+2023-04-23 05:53:19.895514: W tensorflow/tsl/framework/cpu_allocator_impl.cc:82] Allocation of 72000000000 exceeds 10% of free system memory.
