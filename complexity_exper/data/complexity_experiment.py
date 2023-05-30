@@ -135,8 +135,6 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
                     final += [(row_count, None)]
                     continue
                 
-                del model
-                del model2
                 final += [(row_count, stop_lstsq - start_lstsq)] 
 
         results_dict[reg_name] = final   
