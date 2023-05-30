@@ -6,15 +6,15 @@ import seaborn as sns
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
-import torch
-import mxnet as mx
+# import torch
+# import mxnet as mx
 import pyaml
 from pathlib import Path
 from time import perf_counter, process_time
 
 
 def linreg_pipeline(data_path: str, include_regs="all", split_pcnt=None, random_seed=None, time_type="total", 
-                    vis_theme="whitegrid", output_folder=os.getcwd(), verbose_output=True, want_figs=True):
+                    vis_theme="whitegrid", output_folder=os.getcwd(), verbose_output=True, want_figs=True) -> dict:
 
     """
     This function is the main entry point for the linear regression pipeline. It takes in a path to a csv file, then performs
@@ -48,12 +48,14 @@ def linreg_pipeline(data_path: str, include_regs="all", split_pcnt=None, random_
         
     """
 
+    # Reading and splitting the data into train and test sets
     data = pd.read_csv(data_path, header=None).values
     data, fields = data_ingestion(data)
     timer = set_time_type(time_type)
     reg_names = decide_regressors(include_regs)
     X_train, X_test, y_train, y_test = split_data(data, split_pcnt, random_seed)
     
+    # Running the regression loop
     results_dict = regression_loop(X_train, y_train, X_test, timer, reg_names, verbose_output)
 
     successful_regs = list(results_dict.keys())
@@ -65,7 +67,10 @@ def linreg_pipeline(data_path: str, include_regs="all", split_pcnt=None, random_
         ("R2", metrics.r2_score),
     ]
 
-    process_results(results_dict, y_test, metric_lst)
+    # Adding distance evaluations to results_dict
+    results_dict = process_results(results_dict, y_test, metric_lst)
+
+    # Generating figures and saving results
     run_number = get_and_increment_run_counter()
     output_folder = create_output_folder(run_number)
     if want_figs:
@@ -86,7 +91,7 @@ def linreg_pipeline(data_path: str, include_regs="all", split_pcnt=None, random_
     return results_dict
     
 
-def data_ingestion(data: pd.DataFrame | np.ndarray):
+def data_ingestion(data: pd.DataFrame | np.ndarray) -> tuple[np.ndarray, list]:
     """
     This function takes in a pd.DataFrame or np.ndarray and returns a np.ndarray and a list of column names.
 
@@ -97,7 +102,10 @@ def data_ingestion(data: pd.DataFrame | np.ndarray):
     Returns:
         
         data (np.ndarray): data to be used in regression
+
+        fields (list): list of column names
     """
+
     assert isinstance(data, (pd.DataFrame, np.ndarray)), f"Data must be of type pd.DataFrame or np.ndarray, not {type(data)}"
     fields = []
     if isinstance(data, pd.DataFrame):
@@ -108,7 +116,43 @@ def data_ingestion(data: pd.DataFrame | np.ndarray):
     return data, fields
 
 
-def set_time_type(time_type):
+def process_results(results_dict: dict, y_test: np.ndarray, metrics: list) -> dict:
+    """
+    This function takes in a dictionary of regression results and adds distance metrics to the dictionary.
+    
+    Args:
+    
+        results_dict (dict): dictionary of regression results
+        
+        y_test (np.ndarray): array of target values
+        
+        metrics (list): list of tuples containing metric names and metric functions
+        
+    Returns:
+    
+        results_dict (dict): dictionary of regression results with distance metrics added
+    """
+
+    for reg_name, reg_output in results_dict.items():
+        for metric, formula in metrics:
+            score = formula(y_test, reg_output["y_pred"])
+            results_dict[reg_name][metric] = score
+    return results_dict
+
+
+def set_time_type(time_type: str) -> object:
+    """
+    This function takes in a string and returns a timer function based on the string.
+    
+    Args:
+    
+        time_type (str): "total" to use perf_counter and measure time in sleep, or "process" to measure only cpu time
+
+    Returns:
+
+        timer (function): a timer function
+    """
+
     match time_type:
         case "total":
             timer = perf_counter
@@ -122,7 +166,18 @@ def set_time_type(time_type):
     return timer
 
 
-def decide_regressors(include_regs):
+def decide_regressors(include_regs: str | list | set | tuple) -> list:
+    """
+    This function takes in a string "all" or container and returns a list of regressors to use in the regression loop.
+    
+    Args:
+    
+        include_regs (str or container): "all" to use all algorithms or a list of desired algorithms to use a subset
+        
+    Returns:
+    
+        reg_names (list): list of regressors to use in the regression loop
+    """
     possible_regressors = [
         "tf-necd",
         "tf-cod",
@@ -146,7 +201,28 @@ def decide_regressors(include_regs):
     return reg_names
 
 
-def split_data(data, split_pcnt, seed):
+def split_data(data: np.ndarray, split_pcnt: None | float, seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    This function takes in a numpy array and returns a train/test split of the data based on a specified split percentage.
+    
+    Args:
+    
+        data (np.ndarray): data to be split into train/test
+        
+        split_pcnt (int or float): percentage of data to be used for training
+        
+        seed (int): random seed to be used for reproducibility
+        
+    Returns:
+    
+        X_train (np.ndarray): training data
+
+        X_test (np.ndarray): testing data
+
+        y_train (np.ndarray): training labels
+
+        y_test (np.ndarray): testing labels
+    """
     assert isinstance(split_pcnt, (int, float)) or split_pcnt is None, f"Invalid value passed for split_pcnt: {split_pcnt}\nSee documentation"
     if split_pcnt is None:
         X_train, X_test, y_train, y_test = data[:, :-1], data[:, :-1], data[:, -1], data[:, -1]
@@ -157,7 +233,31 @@ def split_data(data, split_pcnt, seed):
     return X_train, X_test, y_train, y_test
 
 
-def regression_loop(X_train, y_train, X_test, timer, reg_names, verbose_output):
+def regression_loop(X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, timer: object, reg_names: list, verbose_output: bool):
+    """
+    This function takes in training and testing data, and performs linear regression using each of the specified
+     OLS implementations. It returns a dictionary of results including the trained model, the time to train the model,
+     and the predictions.
+    
+    Args:
+    
+        X_train (np.ndarray): training data
+        
+        y_train (np.ndarray): training labels
+        
+        X_test (np.ndarray): testing data
+        
+        timer (function): a timer function
+        
+        reg_names (list): list of regressors to use in the regression loop
+        
+        verbose_output (bool): whether to include the model in the results dictionary
+        
+    Returns:
+    
+        results_dict (dict): dictionary of results
+    """
+
     results_dict = {}
         
     for reg_name in reg_names:       
@@ -202,16 +302,23 @@ def regression_loop(X_train, y_train, X_test, timer, reg_names, verbose_output):
         
     return results_dict
 
-def process_results(results_dict, y_test, metrics):
-    for reg_name, reg_output in results_dict.items():
-        for metric, formula in metrics:
-            if type(reg_output) != dict:
-                breakpoint()
-            score = formula(y_test, reg_output["y_pred"])
-            results_dict[reg_name][metric] = score
 
-def dump_to_yaml(path, object, verbose_output = True):
-    print(f"Results dict: {object.keys()}")
+def dump_to_yaml(path: Path, object: dict, verbose_output = True):
+    """
+    This function takes in a dictionary of results and dumps it to a yaml file.
+    
+    Args:
+    
+        path (str): path to the output file
+        
+        object (dict): dictionary to be written to yaml
+        
+        verbose_output (bool): whether to include the model predictions in the yaml file
+        
+    Returns:
+    
+        None
+    """
     if not verbose_output:
         for reg in object.keys():
             del object[reg]["y_pred"]
@@ -220,7 +327,32 @@ def dump_to_yaml(path, object, verbose_output = True):
         dump = pyaml.dump(object)
         f_log.write(dump)
 
-def generate_figures(results_dict, X_test, y_test, vis_theme, metric_lst, successful_regs, output_folder):
+
+def generate_figures(results_dict: dict, X_test: np.ndarray, y_test: np.ndarray, vis_theme: str, successful_regs: list,
+                      output_folder: Path):
+    """
+    This function creates a figure depicting the circular data and its regression line and saves the images in the output folder
+
+    Args:
+
+        results_dict (dict): dictionary of regression results
+
+        X_test (np.ndarray): testing data
+
+        y_test (np.ndarray): testing labels
+
+        vis_theme (str): visualization theme
+
+        successful_regs (list): list of regressors that were successfully run
+
+        output_folder (str): path to the output folder
+
+    Returns:
+
+        None
+    """
+
+    # Styling the plots
     SMALL_SIZE = 10
     MEDIUM_SIZE = 14
     BIGGER_SIZE = 18
@@ -238,11 +370,14 @@ def generate_figures(results_dict, X_test, y_test, vis_theme, metric_lst, succes
     plt.ticklabel_format(style = 'plain')
       
     fig, ax = plt.subplots()
+
+    # Plotting the data points
     sns.scatterplot(x=X_test.flatten(), y=y_test.flatten(), ax=ax, color="blue", edgecolor="blue", s=100)
 
     # To produce regression line on the interval bounded by -50 and 50
     X_range = np.linspace(-50, 50, 2)[:, np.newaxis]
 
+    # Plotting the regression line
     reg_lines = [X_range @ results_dict[regressor]["model"] for regressor in successful_regs]
     for line, regressor in zip(reg_lines, successful_regs):
         ax.plot(X_range.flatten(), line.flatten(), color='black', alpha = 0.75, linewidth=8)
@@ -264,8 +399,20 @@ def generate_figures(results_dict, X_test, y_test, vis_theme, metric_lst, succes
     plt.close(fig="all")
 
 
-def get_and_increment_run_counter():
-    program_container = list(Path.cwd().rglob("AutoLinRegTools.py"))[0].parent
+def get_and_increment_run_counter() -> int:
+    """
+    This function is used to keep track of the number of times the program has been run, by incrementing the name
+    of a file called "cnt" by 1 each time the program is run.
+
+    Args:
+
+        None
+
+    Returns:
+
+        cnt (int): The number of times the program has been run
+    """
+    program_container = list(Path.cwd().rglob("run_lin_reg.py"))[0].parent
     cnt_file_lst = list(program_container.glob("cnt_*"))
     
     if not cnt_file_lst:
@@ -280,17 +427,28 @@ def get_and_increment_run_counter():
     return cnt
     
 
-def create_output_folder(run_number):
-    program_container = list(Path.cwd().rglob("AutoLinRegTools.py"))[0].parent
+def create_output_folder(run_number: int) -> Path:
+    """
+    This function creates a folder to store the outputs of the program. The folder is named "output_{run_number}".
+    
+    Args:
+    
+        run_number (int): The number of times the program has been run
+        
+    Returns:
+    
+        output_folder (Path): The path to the folder where the outputs will be stored
+    """
+    program_container = list(Path.cwd().rglob("run_lin_reg.py"))[0].parent
     output_folder = program_container /"outputs" / f"output_{run_number}"
     output_folder.mkdir(parents=True, exist_ok=True)
     
     return output_folder
     
 
-def main(data_path, params):
+def main(data_path: str, params: dict):
     
-    results = linreg_pipeline(data_path, **params)
+    linreg_pipeline(data_path, **params)
         
     print("Run complete")
 
@@ -303,7 +461,7 @@ if __name__ == "__main__":
             data_path = hyper_path,
             params = {
                 "random_seed": 100,
-                "chosen_figures": ["2d_scatterplot_w_regression_line"]
+                "include_regs": ["sklearn-svddc"]
             }
         )
     

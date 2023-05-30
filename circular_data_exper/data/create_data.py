@@ -169,6 +169,6 @@ if __name__ == '__main__':
     ######## Building Circular Data ###########
     axes = [10,10]
     rotation_set = [0, 5, 15, 30, 60, 90] #5, 15, 30, 60, 90
-    n_subset_set = [3,4,5]
+    n_subset_set = [3] #3,4,5
     resolution = 0.001
     main(axes,rotation_set, n_subset_set, resolution)
