@@ -17,7 +17,19 @@ import memray
 
 def get_data_array(rows, cols, seed=100) -> np.array:
     """
-    Datapath -> np.array
+    Creates a dataset of specified size with random values
+
+    Args:
+
+        rows (int) - number of rows in dataset
+
+        cols (int) - number of columns in dataset
+
+        seed (int) - seed for random number generator
+
+    Returns:
+
+        data (np.array) - array of random values of specified size
     """
 
     rng = np.random.default_rng(seed=seed)
@@ -30,15 +42,23 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
     """
     This function will record the runtimes to create a model of each specified regressor using a dataset of varying size. The size of the dataset will vary according to a schedule
     specified by rows_in_expr parameter. The output will be a dictionary recording these results
+
     Args:
+
         X_train (np.array) - array of full dataset attributes
+
         y_train (np.array) - array of full dataset target variable
+
         timer (timer object) - timer either perf_counter or process time
+
         reg_names (list) - list of regressors that will be in experiment
-        rows_in_expr (list) - a list of rows that will be used in experiment e.g. [10, 100, 1000, 10000] 
+
+        rows_in_expr (list) - a list of rows that will be used in experiment e.g. [10, 100, 1000, 10000]
+
         n_iters_per_row (int) - number of iterations to run for each row count
 
     Returns:
+
         results_dict (dict) - dictionary of format {regressor: [list of runtimes for each # of rows specified in rows_in_expr]}
 
     """
@@ -49,11 +69,13 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
     for reg_name in reg_names:
         final = []
         print(f"starting actual experiment with {reg_name}")
-         
+        
+        # repeating experiment with increasing number of rows
         for row_count in rows_in_expr:
             partial_X_train = X_train[:row_count, :]
             partial_y_train = y_train[:row_count] 
             
+            # repeating experiment for each number of rows 'n_iters_per_row' times
             for iter in range(n_iters_per_row):
                 output_path = Path("memory_output") / f"mem_{reg_name}_{row_count}_{iter}.bin"
 
@@ -123,6 +145,17 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
 
 
 def set_time_type(time_type: str) -> object:
+    """
+    Sets the timer to be used for timing the experiments
+
+    Args:
+
+        time_type (str) - one of the following: "total", "process"
+
+    Returns:
+
+        timer (object) - the timer to be used for timing the experiments
+    """
     match time_type:
         case "total":
             timer = perf_counter_ns   
@@ -170,13 +203,19 @@ def theoretical_expr(n: int, r: int, reg_names: list, rows_in_expr: list) -> dic
     This function will record the runtimes to perform the theoretical number of flops for the least squares solver employed by each library for a specified
     number of rows. The rows_in_expr list contains the varying number of rows in this experiment. This will be performed for
     each regressor and the output will be a dictionary recording these results
+
     Args:
+
         n (int) - the number of columns of the dataset
+
         r (int) - the rank of the dataset
+
         reg_names (list) - list of regressors that will be in experiment
-        rows_in_expr (list) - a list of the orders of magnitude of rows that will be used in experiment e.g. [10, 100, 1000, 10000] 
+
+        rows_in_expr (list) - a list of the rows that will be used in the experiment
 
     Returns:
+
         results_dict (dict) - dictionary of format {regressor: [list of theoretical runtimes for each # of rows specified in rows_in_expr]}
     """
 
@@ -210,20 +249,27 @@ def dump_to_yaml(path: str, object: dict):
 
 def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granularity=2, repeat=10):
     """
-    Makes visualizations for Theoretical Runtime vs. Actual Runtime comparison
+    Runs Theoretical Runtime vs. Actual Runtime comparison
 
     Args:
+
         time_type (str): "process" to get a time without sleep or "total" to get an actual runtime
+
         reg_names (list): list of the regressors to be used
+
         data_rows (int): dataset rows for experiment
+
         data_cols (int): dataset columns for experiment
-        granularity (int): step size of test between orders of magnitude
+
+        granularity (int): step size of test between orders of magnitude value 
+                            (ex. a granularity of 2 will yield 10^1, 10^1.2, 10^1.4, ... rows in experiment)
+
         repeat (int): how many times to repeat experiment
 
     Returns:
-        Saves figures to cwd 
-            OR
+
         Saves results as yaml file
+
     """
 
     timer = set_time_type(time_type)
@@ -232,7 +278,7 @@ def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granul
     m, n = np.shape(array)
     r = np.linalg.matrix_rank(array)
 
-    ## loop to find the maximum number of rows allowed in experiment
+    # loop to find the maximum number of rows allowed in experiment
     max_row_bound = 0
     for i in range(1*10, (len(str(m))+1)*10, granularity):
         if 10**(i/10) <= m:
@@ -241,8 +287,7 @@ def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granul
             max_row_bound = i/10
             break
 
-    rows_in_expr = [math.floor(10**(row_bound/10)) for row_bound in range(1*10, int(max_row_bound*10), granularity)] # to produce orders of magnitude experiment for _ in range(repeat)
-    print(f'Rows in Experiment: {rows_in_expr}')
+    rows_in_expr = [math.floor(10**(row_bound/10)) for row_bound in range(1*10, int(max_row_bound*10), granularity)]
 
     X, Y = array[:,:-1], array[:,-1] 
 
@@ -272,11 +317,6 @@ def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granul
     dump_to_yaml(Path.cwd() / "metadata.yaml", metadata)
     dump_to_yaml(Path.cwd() / "theoretical_time.yaml", theory_time_dict)
     dump_to_yaml(Path.cwd() / "actual_time.yaml", actual_time_dict)
-
-    ########## IF VISUALIZING ############
-    # print('All done with theoretical experiments, now just making viz')
-    # make_viz(actual_time_dict, theory_time_dict, timer, rows_in_expr)
-    # print('All done.')
 
 
 if __name__ =='__main__':
