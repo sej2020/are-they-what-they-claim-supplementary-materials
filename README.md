@@ -15,7 +15,7 @@ This repository was created to display supplementary materials from the above-me
 
 ### To recreate 'Subsections of Circular Data' Experiment
 
-<h5>Steps:<h/>
+<h5>Steps:</h>
 
 1. Run `circular_data_exper/data/create_data.py`
 2. Run `circular_data_exper/analysis/run_lin_reg.py`
