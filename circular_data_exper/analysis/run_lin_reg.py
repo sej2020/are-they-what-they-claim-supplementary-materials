@@ -11,45 +11,48 @@ import mxnet as mx
 import pyaml
 from pathlib import Path
 from time import perf_counter, process_time
-import random
 
-def linreg_pipeline(data_path, include_regs="all", split_pcnt=None, random_seed=None, time_type="total", chosen_figures="all", vis_theme="whitegrid", output_folder=os.getcwd(), verbose_output=True, want_figs=True):
+
+def linreg_pipeline(data_path: str, include_regs="all", split_pcnt=None, random_seed=None, time_type="total", 
+                    vis_theme="whitegrid", output_folder=os.getcwd(), verbose_output=True, want_figs=True):
+
     """
-    Pipeline takes actual data, not a path, and runs each of the linear regression algorithms available over it
+    This function is the main entry point for the linear regression pipeline. It takes in a path to a csv file, then performs
+    linear regression using each of the tested OLS implementations. It then produces two yaml files and an image. The 
+    first yaml file contains the results of the regression, the second contains the metadata of the run, and the image file is
+    a plot of the results of the regression. These files are saved in an output folder.
     
     Args: 
-        data_path - path to file that can become a pd.DataFrame or np.ndarray with target variable in final column and no categorical or missing data
+
+        data_path (str): path to file that can become a pd.DataFrame or np.ndarray with target variable in final column 
+                        and no categorical or missing data
         
-        include_regs - "all" to use all algorithms or a list of desired algorithms to use a subset
-            options: "tf-necd" ::: "tf-cod" ::: "pytorch-qrcp" ::: "pytorch-qr" ::: "pytorch-svd" ::: "pytorch-svddc" ::: "sklearn-svddc" ::: "mxnet-svddc"
+        include_regs (str or container): "all" to use all algorithms or a list of desired algorithms to use a subset
+                                        options - "tf-necd" ::: "tf-cod" ::: "pytorch-qrcp" ::: "pytorch-qr" 
+                                        ::: "pytorch-svd" ::: "pytorch-svddc" ::: "sklearn-svddc" ::: "mxnet-svddc"
             
-        split_pcnt - None to train and test the algorithm over the entirety of the data or a real number from 1 - 100 to use that percentage of the data as a training set and test on the remainder
+        split_pcnt (str or float): None to train and test the algorithm over the entirety of the data or a real number from 1 - 100 
+                                    to use that percentage of the data as a training set and test on the remainder
         
-        random_seed - only used by sklearn.model_selection.train_test_split if split_pcnt != None
+        random_seed (int): only used by sklearn.model_selection.train_test_split if split_pcnt != None
         
-        time_type - "total" to use perf_counter and measure time in sleep, or "process" to measure only cpu time with process_time
+        time_type (str): "total" to use perf_counter and measure time in sleep, or "process" to measure only cpu time 
+                        with process_time
+                    
+        vis_theme (str): "whitegrid" by default, or specify any one of the below options
+                        options - "darkgrid" ::: "whitegrid" ::: "dark" ::: "white" ::: "ticks"
         
-        chosen_figures - "all" to build all figure types below, False to skip generating any figures, or a list of desired figures to use a subset
-            options: "regressor_accuracy_barchart" ::: "regressor_runtime_barchart" ::: "2d_scatterplot_w_regression_line"
-            
-        vis_theme - "darkgrid" by default, or specify any one of the below options
-            options: "darkgrid" ::: "whitegrid" ::: "dark" ::: "white" ::: "ticks"
-        
-    Returns result_dict:
-        includes various useful things
+    Returns:
+
+        results_dict (dict): a dictionary containing regression results
         
     """
-    data = pd.read_csv(data_path, header=None).values
-    
-    data, fields = data_ingestion(data)
-    
-    timer = set_time_type(time_type)
-    
-    reg_names = decide_regressors(include_regs)
 
+    data = pd.read_csv(data_path, header=None).values
+    data, fields = data_ingestion(data)
+    timer = set_time_type(time_type)
+    reg_names = decide_regressors(include_regs)
     X_train, X_test, y_train, y_test = split_data(data, split_pcnt, random_seed)
-    
-    figures = decide_figures(data, chosen_figures, verbose_output)
     
     results_dict = regression_loop(X_train, y_train, X_test, timer, reg_names, verbose_output)
 
@@ -63,13 +66,10 @@ def linreg_pipeline(data_path, include_regs="all", split_pcnt=None, random_seed=
     ]
 
     process_results(results_dict, y_test, metric_lst)
-    
     run_number = get_and_increment_run_counter()
-    
     output_folder = create_output_folder(run_number)
-    
     if want_figs:
-        generate_figures(results_dict, X_test, y_test, fields, vis_theme, metric_lst, figures, successful_regs, output_folder)
+        generate_figures(results_dict, X_test, y_test, vis_theme, successful_regs, output_folder)
     
     metadata = {
         "input_data": data_path.name,
@@ -81,12 +81,23 @@ def linreg_pipeline(data_path, include_regs="all", split_pcnt=None, random_seed=
     }
     
     dump_to_yaml(output_folder / "metadata.yaml", metadata, True)
-    
     dump_to_yaml(output_folder / "results.yaml", results_dict, verbose_output)
     
     return results_dict
     
-def data_ingestion(data):
+
+def data_ingestion(data: pd.DataFrame | np.ndarray):
+    """
+    This function takes in a pd.DataFrame or np.ndarray and returns a np.ndarray and a list of column names.
+
+    Args:
+    
+        data (pd.DataFrame or np.ndarray): data to be used in regression
+    
+    Returns:
+        
+        data (np.ndarray): data to be used in regression
+    """
     assert isinstance(data, (pd.DataFrame, np.ndarray)), f"Data must be of type pd.DataFrame or np.ndarray, not {type(data)}"
     fields = []
     if isinstance(data, pd.DataFrame):
@@ -95,6 +106,7 @@ def data_ingestion(data):
     assert data.dtype != "object", "Data must be numeric, not object type - remove categorical data, impute missing values, or make array regular (not ragged)"
 
     return data, fields
+
 
 def set_time_type(time_type):
     match time_type:
@@ -108,6 +120,7 @@ def set_time_type(time_type):
             raise ValueError(f"time_type must be one of the options shown in the docs, not: {time_type}")
         
     return timer
+
 
 def decide_regressors(include_regs):
     possible_regressors = [
@@ -132,6 +145,7 @@ def decide_regressors(include_regs):
     
     return reg_names
 
+
 def split_data(data, split_pcnt, seed):
     assert isinstance(split_pcnt, (int, float)) or split_pcnt is None, f"Invalid value passed for split_pcnt: {split_pcnt}\nSee documentation"
     if split_pcnt is None:
@@ -142,34 +156,6 @@ def split_data(data, split_pcnt, seed):
         
     return X_train, X_test, y_train, y_test
 
-def decide_figures(data, chosen_figures, verbose_output):
-    impossible_figures = []
-    possible_figures = [
-        "regressor_accuracy_barchart",
-        "regressor_runtime_barchart",
-        "2d_scatterplot_w_regression_line",
-    ]
-    
-    if data.shape[1] > 2:
-        print(f"{'-'*30}\nWarning: Your data is {data.shape[1]} dimensional, so 2D scatterplot will not be created\n{'-'*30}")
-        impossible_figures.append("2d_scatterplot_w_regression_line")
-        
-    if not verbose_output: 
-        impossible_figures.append("2d_scatterplot_w_regression_line")
-            
-    if chosen_figures == "all":
-        figures = [figure_name for figure_name in possible_figures if figure_name not in impossible_figures]
-        
-    elif isinstance(chosen_figures, (tuple, list, set)):
-        figures = [figure_name for figure_name in chosen_figures if (figure_name in possible_figures) and (figure_name not in impossible_figures)]
-        
-    elif chosen_figures == False:
-        figures = None
-        
-    else: 
-        raise ValueError(f'Invalid value passed for generate_figures: {chosen_figures}\nSee documentation')
-
-    return figures
 
 def regression_loop(X_train, y_train, X_test, timer, reg_names, verbose_output):
     results_dict = {}
@@ -234,7 +220,7 @@ def dump_to_yaml(path, object, verbose_output = True):
         dump = pyaml.dump(object)
         f_log.write(dump)
 
-def generate_figures(results_dict, X_test, y_test, fields, vis_theme, metric_lst, figures, successful_regs, output_folder):
+def generate_figures(results_dict, X_test, y_test, vis_theme, metric_lst, successful_regs, output_folder):
     SMALL_SIZE = 10
     MEDIUM_SIZE = 14
     BIGGER_SIZE = 18
@@ -250,83 +236,33 @@ def generate_figures(results_dict, X_test, y_test, fields, vis_theme, metric_lst
     assert vis_theme in possible_themes, f"Invalid value passed for vis_theme: {vis_theme}\nSee documentation"
     sns.set_style(vis_theme, {'font.family':['serif'], 'axes.edgecolor':'black','ytick.left': True})
     plt.ticklabel_format(style = 'plain')
+      
+    fig, ax = plt.subplots()
+    sns.scatterplot(x=X_test.flatten(), y=y_test.flatten(), ax=ax, color="blue", edgecolor="blue", s=100)
 
-    label_lookup = {
-        "tf-necd": "TensorFlow (NE-CD)",
-        "tf-cod": "TensorFlow (COD)",
-        "pytorch-qrcp": "PyTorch (QRCP)",
-        "pytorch-qr": "PyTorch (QR)",
-        "pytorch-svd": "PyTorch (SVD)",
-        "pytorch-svddc": "PyTorch (SVDDC)",
-        "sklearn-svddc": "scikit-learn (SVDDC)",
-        "mxnet-svddc": "MXNet (SVDDC)"
-    }
+    # To produce regression line on the interval bounded by -50 and 50
+    X_range = np.linspace(-50, 50, 2)[:, np.newaxis]
 
-    cdict = {
-        "tf-necd": "red",
-        "tf-cod": "darkblue",
-        "pytorch-qrcp": "darkgreen",
-        "pytorch-qr": "orange",
-        "pytorch-svd": "purple",
-        "pytorch-svddc": "mediumvioletred",
-        "sklearn-svddc": "slategray",
-        "mxnet-svddc": "yellow"
-    }
+    reg_lines = [X_range @ results_dict[regressor]["model"] for regressor in successful_regs]
+    for line, regressor in zip(reg_lines, successful_regs):
+        ax.plot(X_range.flatten(), line.flatten(), color='black', alpha = 0.75, linewidth=8)
     
-    reg_titles = [label_lookup[reg] for reg in successful_regs]
+    # Plotting a thin line over x-axis and y-axis
+    ax.plot([i for i in range(-50,50)], [0 for _ in range(-50,50)], linestyle="dashed", color="gray", alpha=0.5)
+    ax.plot([0 for _ in range(-50,50)], [i for i in range(-50,50)], linestyle="dashed", color="gray", alpha=0.5)
 
-    if "regressor_accuracy_barchart" in figures:
-        for metric, _ in metric_lst:
-            fig, ax = plt.subplots()
-            scores_data = [results_dict[regressor][metric] for regressor in successful_regs]
-            sns.barplot(x=reg_titles, y=scores_data, color="darkgray", width=0.5, ax=ax, edgecolor='black')
-            fig.suptitle(f"{metric} performance by model")
-            ax.set_xlabel("Regressor Name")
-            ax.set_ylabel(f"{metric}")
-            plt.savefig(output_folder / f"{metric}_barchart.png")
-            
-    if "regressor_runtime_barchart" in figures:
-        fig, ax = plt.subplots()
-        elapsed = [(results_dict[regressor]["elapsed_time"], "s") if results_dict[successful_regs[0]]["elapsed_time"] > 10 else (results_dict[regressor]["elapsed_time"] / 1000, "ms") for regressor in successful_regs] # if elapsed time shorter than 10s, report in ms            
-        sns.barplot(x=reg_titles, y=[pair[0] for pair in elapsed], ax=ax) # get times from elapsed
-        fig.suptitle(f"Runtime by model")
-        ax.set_xlabel("Regressor Name")
-        ax.set_ylabel(f"Runtime in {elapsed[0][1]}")
-        plt.savefig(output_folder / f"runtime_barchart.png")
-            
-    if "2d_scatterplot_w_regression_line" in figures:
-        fig, ax = plt.subplots()
-        sns.scatterplot(x=X_test.flatten(), y=y_test.flatten(), ax=ax, color="blue", edgecolor="blue", s=100)
-
-        # To produce regression line on the interval bounded by test data
-        # X_range = np.linspace(np.min(X_test), np.max(X_test), 2)[:, np.newaxis]
-
-        # To produce regression line on the interval bounded by -50 and 50
-        X_range = np.linspace(-50, 50, 2)[:, np.newaxis]
-
-        reg_lines = [X_range @ results_dict[regressor]["model"] for regressor in successful_regs]
-        for line, regressor in zip(reg_lines, successful_regs):
-            ax.plot(X_range.flatten(), line.flatten(), label=label_lookup[regressor], color='black', alpha = 0.75, linewidth=8) #cdict[regressor]
-        
-        # Plotting a thin line over x-axis and y-axis
-        ax.plot([i for i in range(-50,50)], [0 for _ in range(-50,50)], linestyle="dashed", color="gray", alpha=0.5)
-        ax.plot([0 for _ in range(-50,50)], [i for i in range(-50,50)], linestyle="dashed", color="gray", alpha=0.5)
-
-        # ax.legend()
-        ax.set_ylim(-12,12)
-        ax.set_xlim(-15,15)
-        ax.grid(False)
-        plt.axis('off')
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        ax.set_aspect('equal')
-        # fig.suptitle(f"OLS Regression Lines Over Data")
-        # ax.set_xlabel(f"{fields[0] if fields else 'X'}")
-        # ax.set_ylabel(f"{fields[1] if fields else 'Y'}")
-        plt.savefig(output_folder / f"regression.png", dpi=300, bbox_inches='tight', pad_inches=0.0)
+    ax.set_ylim(-12,12)
+    ax.set_xlim(-15,15)
+    ax.grid(False)
+    plt.axis('off')
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    ax.set_aspect('equal')
+    plt.savefig(output_folder / f"regression.png", dpi=300, bbox_inches='tight', pad_inches=0.0)
         
     plt.clf()
     plt.close(fig="all")
+
 
 def get_and_increment_run_counter():
     program_container = list(Path.cwd().rglob("AutoLinRegTools.py"))[0].parent
@@ -343,6 +279,7 @@ def get_and_increment_run_counter():
     
     return cnt
     
+
 def create_output_folder(run_number):
     program_container = list(Path.cwd().rglob("AutoLinRegTools.py"))[0].parent
     output_folder = program_container /"outputs" / f"output_{run_number}"
@@ -350,30 +287,16 @@ def create_output_folder(run_number):
     
     return output_folder
     
+
 def main(data_path, params):
     
     results = linreg_pipeline(data_path, **params)
-    reg_names = [
-        "tf-necd",
-        "tf-cod",
-        "pytorch-qrcp",
-        "pytorch-qr",
-        "pytorch-svd",
-        "pytorch-svddc",
-        "sklearn-svddc",
-        "mxnet-svddc",
-    ]
-    
-    ## this section should be commented out if you can't run all regressors ##
-    # stuff = [results[reg]["model"] for reg in reg_names]                     #
-    # for name, model in zip(reg_names, stuff):                                #  
-    #     print(f"{name} has model: \n{model}\n{'='*30}")                      #
-    ##########################################################################
         
     print("Run complete")
 
+
 if __name__ == "__main__":
-    container_path = Path("BetaDataExper/HyperEllipsoid/rem_points_test_v2/data/")
+    container_path = Path("circular_data_exper/data/raw_data")
     
     for hyper_path in container_path.glob("_*"):
         main(
