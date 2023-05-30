@@ -20,8 +20,9 @@ This repository was created to display supplementary materials from the above-me
 1. Run `circular_data_exper/data/create_data.py`
 2. Run `circular_data_exper/analysis/run_lin_reg.py`
 3. Run `circular_data_exper/analysis/aggregate_results.py`
-4. Your result CSVs will be `circular_data_exper/analysis/final_results` folder and the their accompanying images will be in `circular_data_exper/analysis/regression_pics`
-To run again, delete `circular_data_exper/analysis/final_results`, `circular_data_exper/analysis/outputs`, `circular_data_exper/data/raw_data`, `circular_data_exper/analysis/regression_pics` folders and `circular_data_exper/analysis/cnt_#.txt` file. Start again with Step 1.
+4. Your result CSVs will be `circular_data_exper/analysis/final_results` folder and the their accompanying images will be in `circular_data_exper/analysis/regression_pics`.
+
+<p>To run again, delete `circular_data_exper/analysis/final_results`, `circular_data_exper/analysis/outputs`, `circular_data_exper/data/raw_data`, `circular_data_exper/analysis/regression_pics` folders and `circular_data_exper/analysis/cnt_#.txt` file. Start again with Step 1.<p/>
 ---
 
 ### To recreate 'High-Dimensional Data' Experiment
