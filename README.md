@@ -18,13 +18,13 @@ conda activate <env>
 ```
 
 
-### To recreate 'Runtime Comparison' and 'Memory Comparison' Experiments
+## To recreate 'Runtime Comparison' and 'Memory Comparison' Experiments
 
 Both experiments are initialized, run, and analyzed together because recording runtime and recording memory usage are two very similar tasks. Details about the theory behind these experiments can be found in the paper, but we will provide steps to replicate the results on your own system.
 
 NOTICE: The memory usage experiment relies on [Memray](https://bloomberg.github.io/memray/), which does not and is "unlikely to ever support Windows", as per their [Supported Environments](https://bloomberg.github.io/memray/supported_environments.html) page. Accordingly, this experiment does not run on Windows machines. In order to run just the time profiling (and ignore memory), a Windows user could remove the memray import and the indented blocks in which memory profiling occurs in `complexity_exper/data/complexity_experiment.py`. Additionally, the Memray works better on Linux than on Mac. Although it will function on Mac, the postprocessing notebook might throw numerous warnings/errors -- these can be ignored unless they halt program execution. Finally, the postprocessing of memory files MUST be completed on the same system which performed the experiment due to the [intricacies](https://bloomberg.github.io/memray/native_mode.html#how-memray-resolves-symbols) of Memray.
 
-##### Steps:
+#### Steps:
 1. Run the Linpack Benchmark
     1) Enter the complexity experiment's data generation directory
         ```
@@ -66,9 +66,9 @@ NOTICE: The memory usage experiment relies on [Memray](https://bloomberg.github.
 
 The results shown in this paper are under `complexity_exper/analysis`. Experimental results are included for two of Indiana University's High-Performance Computing systems ([Quartz](https://kb.iu.edu/d/qrtz) and [Carbonate](https://kb.iu.edu/d/aolp)), as well as a MacBook Pro.
 
-### To recreate 'Subsections of Circular Data' Experiment
+## To recreate 'Subsections of Circular Data' Experiment
 
-##### Steps:
+#### Steps:
 
 1. Run `circular_data_exper/data/create_data.py`
 2. Run `circular_data_exper/analysis/run_lin_reg.py`
@@ -77,9 +77,9 @@ The results shown in this paper are under `complexity_exper/analysis`. Experimen
 
 To run again, delete `circular_data_exper/analysis/final_results`, `circular_data_exper/analysis/outputs`, `circular_data_exper/data/raw_data`, `circular_data_exper/analysis/regression_pics` folders and `circular_data_exper/analysis/cnt_#.txt` file. Start again with Step 1.
 
-### To recreate 'High-Dimensional Data' Experiment
+## To recreate 'High-Dimensional Data' Experiment
 
-##### Steps:
+#### Steps:
 
 1. Run `high_dimensional_exper/analysis/run_datasets.py`
 2. Run `high_dimensional_exper/analysis/result_aggregation.py`
@@ -88,7 +88,7 @@ The results of this experiment are already stored in the `high_dimensional_exper
 
 ---
 
-Email Joshua Elms (joshua.elms111@gmail.com) for questions.
+Email Sam Johnson (sj110@iu.edu) for questions.
 
 If you find this work useful, cite it using:
 ```
