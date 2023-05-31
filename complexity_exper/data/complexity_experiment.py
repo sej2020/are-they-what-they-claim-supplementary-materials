@@ -65,10 +65,17 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
     results_dict = {}
     failed_regs = []
     exceptions_lst = []
+    output_dir = Path() / "complexity_results"
+    output_dir.mkdir(exist_ok=True, parents=True)
+    for dir in ("memory_figures", "processed_output", "raw_data", "runtime_figures"):
+        (output_dir / dir).mkdir(exist_ok=True, parents=True)
+    memory_dir = output_dir / "raw_data" / "memory_output"
+    memory_dir.mkdir(exist_ok=True, parents=True)
+
 
     for reg_name in reg_names:
         final = []
-        print(f"starting actual experiment with {reg_name}")
+        print(f"Working on: {reg_name}")
         
         # repeating experiment with increasing number of rows
         for row_count in rows_in_expr:
@@ -77,7 +84,7 @@ def actual_expr(X_train: np.array, y_train: np.array, timer: object, reg_names: 
             
             # repeating experiment for each number of rows 'n_iters_per_row' times
             for iter in range(n_iters_per_row):
-                output_path = Path("memory_output") / f"mem_{reg_name}_{row_count}_{iter}.bin"
+                output_path =  memory_dir / f"mem_{reg_name}_{row_count}_{iter}.bin"
 
                 try:
                     match reg_name:
@@ -220,7 +227,6 @@ def theoretical_expr(n: int, r: int, reg_names: list, rows_in_expr: list) -> dic
     exper_vals = [(rows,n,r) for rows in rows_in_expr]
     results_dict = {}
     for reg_name in reg_names:
-        print(f"starting theoretical experiment with {reg_name}")
         func = comp_complexity_dict(reg_name)
         flops = list(map(func, exper_vals))
 
@@ -241,8 +247,7 @@ def dump_to_yaml(path: str, object: dict):
 
     with open(path, "w") as f_log:
         dump = pyaml.dump(object)
-        f_log.write(dump)
-            
+        f_log.write(dump)          
 
 
 def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granularity=2, repeat=10):
@@ -311,19 +316,26 @@ def main(time_type: str, reg_names: list, data_rows: int, data_cols: int, granul
         "timer_method": f"{time_type} in nanoseconds",
         "reg_names": [name for name in reg_names if name not in failed_regs]
     }
-
-    dump_to_yaml(Path.cwd() / "metadata.yaml", metadata)
-    dump_to_yaml(Path.cwd() / "theoretical_time.yaml", theory_time_dict)
-    dump_to_yaml(Path.cwd() / "actual_time.yaml", actual_time_dict)
+    output_dir = Path.cwd() / "complexity_results" / "raw_data"
+    dump_to_yaml(Path.cwd() / "complexity_results" / "metadata.yaml", metadata)
+    dump_to_yaml(output_dir / "theoretical_time.yaml", theory_time_dict)
+    dump_to_yaml(output_dir / "actual_time.yaml", actual_time_dict)
 
 
 if __name__ =='__main__':
-
+    """
+    time_type (str): "process" to get a time without sleep or "total" to get an actual runtime. The paper uses "process".
+    reg_names (list): list of desired algorithms to be used. The paper uses all of them.
+    data_rows (int): dataset rows for experiment. The paper shows a few row counts, but 10E9 proved to be the upper limit we could run on 512 GB RAM.
+    data_cols (int): dataset columns for experiment. The paper uses 10.
+    granularity (int): step size of test between orders of magnitude value (ex. a granularity of 2 will yield 10^1, 10^1.2, 10^1.4, ... rows in experiment)
+    repeat (int): how many times to repeat experiment. The paper uses 10.
+    """
     time_type = "process" #process or total
-    reg_names = ["tf-necd", "tf-cod", "sklearn-svddc"] 
     reg_names = ["tf-necd", "tf-cod", "pytorch-qrcp", "pytorch-qr", "pytorch-svd", "pytorch-svddc", "sklearn-svddc"]
-        # "tf-necd", "tf-cod", "pytorch-qrcp", "pytorch-qr", "pytorch-svd", "pytorch-svddc", "sklearn-svddc"
-    data_rows = 10_000_000
+    data_rows = 10_000
     data_cols = 10
+    granularity=5
+    repeat=10
 
-    main(time_type, reg_names, data_rows=data_rows, data_cols=data_cols, granularity=5, repeat=1)
+    main(time_type, reg_names, data_rows=data_rows, data_cols=data_cols, granularity=granularity, repeat=repeat)
