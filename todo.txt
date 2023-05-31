@@ -1,5 +1,0 @@
-Josh
-    1. Cleanup complexity
-    2. Write README for complexity (explain no windows)
-    3. Create requirements.txt / env.yaml
-    4. Include results of experiments on other machines

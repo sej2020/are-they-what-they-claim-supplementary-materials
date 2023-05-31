@@ -1,0 +1,16 @@
+scipy
+pandas
+matplotlib
+seaborn
+numpy=1.23.1
+ipykernel
+pyaml
+requests
+scikit-learn
+matchpy
+pytorch
+torchvision
+tensorflow
+prettytable
+memray
+mxnet 

@@ -17,6 +17,8 @@ conda create --name <env> --file environment.yaml
 conda activate <env>
 ```
 
+If either of these commands fail or take more than a few hours to run, we recommend removing the `mxnet` requirement from the `requirements.txt` / `environment.yaml` file and retrying the install. You will have to comment out any use of `mxnet` later on during the pipeline, however. Some of this conflict is unavoidable and due to each of the libraries used having varying dependencies.
+
 
 ## To recreate 'Runtime Comparison' and 'Memory Comparison' Experiments
 
