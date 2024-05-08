@@ -1,7 +1,7 @@
 # Are They What They Claim: A Comprehensive Study of Ordinary Linear Regression Among the Top Machine Learning Libraries in Python
 ### by Sam Johnson, Josh Elms, Madhavan K R, Keerthana Sugasi, Parichit Sharma, Hasan Kurban and Mehmet M. Dalkilic
 ---
-This repository was created to display supplementary materials from the above-mentioned \[[paper]()\] submitted to KDD2023. Below are steps to replicate the author's experiments in the paper. 
+This repository was created to display supplementary materials from the above-mentioned \[[paper](https://kdd.org/kdd2023/wp-content/uploads/2023/08/johnson2023are.pdf)\] submitted to KDD2023. Below are steps to replicate the author's experiments in the paper. 
 
 ## Setup
 To set up for a run of this pipeline, you will need to download and install the necessary libraries. Please ensure you have python >= 3.7. Determine whether you are using pip or conda (if you don't know, use the instructions for pip). 
